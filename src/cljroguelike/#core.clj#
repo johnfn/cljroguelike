@@ -75,23 +75,9 @@
 
   (.fillRect gfx 0 0 *size* *size*)
   (render-map gfx)
-
- 
-  ;(println (first state))
-  (let [item (first state)]
-    (draw-tile (:x item) (:y item) \1 gfx))
-
-  (doseq [item state]
-    (do 
-      (draw-tile (:x item) (:y item) \1 gfx)))
-  ;(for [item state]
-  ;  (println (:x item) (:y item) "1" gfx))
-  
-  (for [item state]
-    (draw-tile (:x item) (:y item) "1" gfx))
   )
 
-(defn double-buffer-game [p state]
+(defn drawRectangle [p state]
   (let [bfs (.getBufferStrategy p)
         gfx (.getDrawGraphics bfs)]
     (render-game gfx state)
@@ -104,45 +90,23 @@
 
 (defmulti update (fn[x] (:type x)))
 
-(defn in-bounds [x y]
-  (and (< x (- (count map1) 1))
-       (< y (- (count map1) 1))
-       (> x 0)
-       (> x 0)))
-
-(defn wall [x y]
-  (and (in-bounds x y)
-       (= \1 (nth (nth map1 y) x))))
-
 (defmethod update :player [player]
-  (let [old-x (:x player)
-        old-y (:y player)
-        try-x (+ old-x (if (@keys-down 37) -1 0) (if (@keys-down 39) 1 0))
-        try-y (+ old-y (if (@keys-down 38) -1 0) (if (@keys-down 40) 1 0))]
-    (let [new-x (if (wall try-x try-y) old-x try-x)
-          new-y (if (wall try-x try-y) old-y try-y)]
-      {:y new-y
-       :x new-x
-       :type :player
-      })))
+  player)
 
 (defmethod update :enemy [enemy]
   enemy)
 
 (defn core-loop [frame state]
-  (if (not (empty? @keys-down))
-    (println @keys-down))
-
-  (double-buffer-game frame state)
+  (drawRectangle frame state)
   (Thread/sleep 5)
   (.setTitle frame "HURF."))
 
 (defn skeleton-loop [frame]
-  (loop [state [{:type :player :x 0 :y 10}
-                {:type :enemy  :x 0  :y 2}
+  (loop [state [{:type :player :x 10 :y 10}
+                {:type :enemy  :x 2  :y 2}
                 ]]
     (core-loop frame state)
-    (recur (doall (map update state)))))
+    (recur (map update state))))
 
 (defn -main[]
   (def panel
